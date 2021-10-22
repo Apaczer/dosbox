@@ -257,6 +257,9 @@ struct Handler : public Adlib::Handler {
 
 	Handler(bool opl3Mode) : chip(opl3Mode) {
 	}
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
+
 };
 
 
