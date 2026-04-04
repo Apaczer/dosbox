@@ -530,26 +530,26 @@ void SVGA_Setup_S3Trio(void) {
 	svga.hardware_cursor_active = &SVGA_S3_HWCursorActive;
 	svga.accepts_mode = &SVGA_S3_AcceptsMode;
 
-	if (vga.vmemsize == 0)
-		vga.vmemsize = 2*1024*1024; // the most common S3 configuration
+	// if (vga.vmemsize == 0)
+	// 	vga.vmemsize = 2*1024*1024; // the most common S3 configuration
 
 	// Set CRTC 36 to specify amount of VRAM and PCI
-	if (vga.vmemsize < 1024*1024) {
+	// if (vga.vmemsize < 1024*1024) {
 		vga.vmemsize = 512*1024;
 		vga.s3.reg_36 = 0xfa;		// less than 1mb fast page mode
-	} else if (vga.vmemsize < 2048*1024)	{
-		vga.vmemsize = 1024*1024;
-		vga.s3.reg_36 = 0xda;		// 1mb fast page mode
-	} else if (vga.vmemsize < 3072*1024)	{
-		vga.vmemsize = 2048*1024;
-		vga.s3.reg_36 = 0x9a;		// 2mb fast page mode
-	} else if (vga.vmemsize < 4096*1024)	{
-		vga.vmemsize = 3072*1024;
-		vga.s3.reg_36 = 0x5a;		// 3mb fast page mode
-	} else {	// Trio64 supported only up to 4M
-		vga.vmemsize = 4096*1024;
-		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
-	}
+	// } else if (vga.vmemsize < 2048*1024)	{
+	// 	vga.vmemsize = 1024*1024;
+	// 	vga.s3.reg_36 = 0xda;		// 1mb fast page mode
+	// } else if (vga.vmemsize < 3072*1024)	{
+	// 	vga.vmemsize = 2048*1024;
+	// 	vga.s3.reg_36 = 0x9a;		// 2mb fast page mode
+	// } else if (vga.vmemsize < 4096*1024)	{
+	// 	vga.vmemsize = 3072*1024;
+	// 	vga.s3.reg_36 = 0x5a;		// 3mb fast page mode
+	// } else {	// Trio64 supported only up to 4M
+	// 	vga.vmemsize = 4096*1024;
+	// 	vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
+	// }
 
 	// S3 ROM signature
 	PhysPt rom_base=PhysMake(0xc000,0);
