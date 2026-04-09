@@ -532,13 +532,16 @@ void SVGA_Setup_S3Trio(void) {
 	svga.hardware_cursor_active = &SVGA_S3_HWCursorActive;
 	svga.accepts_mode = &SVGA_S3_AcceptsMode;
 
+#ifndef LOWMEM
 	if (vga.vmemsize == 0)
 		vga.vmemsize = 2*1024*1024; // the most common S3 configuration
 
 	// Set CRTC 36 to specify amount of VRAM and PCI
 	if (vga.vmemsize < 1024*1024) {
+#endif
 		vga.vmemsize = 512*1024;
 		vga.s3.reg_36 = 0xfa;		// less than 1mb fast page mode
+#ifndef LOWMEM
 	} else if (vga.vmemsize < 2048*1024)	{
 		vga.vmemsize = 1024*1024;
 		vga.s3.reg_36 = 0xda;		// 1mb fast page mode
@@ -552,6 +555,7 @@ void SVGA_Setup_S3Trio(void) {
 		vga.vmemsize = 4096*1024;
 		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
 	}
+#endif
 }
 
 // save state support

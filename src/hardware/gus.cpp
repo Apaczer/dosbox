@@ -62,8 +62,12 @@ Bit8u adlib_commandreg;
 static MixerChannel * gus_chan;
 static Bit8u irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
 static Bit8u dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
+#ifndef LOWMEM
 // 1024K of GUS Ram
 #define GUSRAM_SIZE (1024*1024)
+#else
+#define GUSRAM_SIZE 0
+#endif
 static Bit8u* GUSRam;
 static Bit16u vol16bit[4096];
 static Bit32u pantable[16];
