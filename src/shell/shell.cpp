@@ -427,6 +427,14 @@ public:
 		Bitu dummy = 1;
 		bool command_found = false;
 		while (control->cmdline->FindCommand(dummy++,line) && !command_found) {
+			if (line.find(':',((line[0]|0x20) >= 'a' && (line[0]|0x20) <= 'z')?2:0) != std::string::npos) {
+				/* a physfs source */
+				autoexec[12].Install(std::string("MOUNT C \"") + line + std::string("\""));
+				autoexec[13].Install("C:");
+				if(secure) autoexec[14].Install("z:\\config.com -securemode");
+				goto nomount;
+			}
+
 			struct stat test;
 			if (line.length() > CROSS_LEN) continue;
 			strcpy(buffer,line.c_str());
@@ -456,11 +464,20 @@ public:
 				}
 				*name++ = 0;
 				if (access(buffer,F_OK)) continue;
-				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
-				autoexec[13].Install("C:");
-				/* Save the non-modified filename (so boot and imgmount can use it (long filenames, case sensivitive)) */
+				/* Save the non-modified filename (so physfs, so boot and imgmount can use it (long filenames, case sensivitive)) */
 				strcpy(orig,name);
 				upcase(name);
+				if((strstr(name,".ZIP") != 0) || (strstr(name,".7Z") != 0)) {
+					//TODO:Add more extensions?
+					LOG_MSG("Mounting %s as PHYSFS write directory", buffer);
+					autoexec[12].Install(std::string("MOUNT C \"") + buffer + std::string(":") + orig
+						+ std::string(":\""));
+					autoexec[13].Install("C:");
+					if(secure) autoexec[14].Install("z:\\config.com -securemode");
+					goto nomount;
+				}
+				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
+				autoexec[13].Install("C:");
 				if(strstr(name,".BAT") != 0) {
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
 					/* BATch files are called else exit will not work */

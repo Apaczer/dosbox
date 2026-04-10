@@ -72,7 +72,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(void) {
 	updatelabel = true;
 }
 
-DOS_Drive_Cache::DOS_Drive_Cache(const char* path) {
+DOS_Drive_Cache::DOS_Drive_Cache(const char* path, DOS_Drive *drive) {
 	dirBase			= new CFileInfo;
 	save_dir		= 0;
 	srchNr			= 0;
@@ -81,7 +81,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(const char* path) {
 	nextFreeFindFirst	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
-	SetBaseDir(path);
+	SetBaseDir(path,drive);
 	updatelabel = true;
 }
 
@@ -102,7 +102,7 @@ void DOS_Drive_Cache::EmptyCache(void) {
 	dirBase		= new CFileInfo;
 	save_dir	= 0;
 	srchNr		= 0;
-	if (basePath[0] != 0) SetBaseDir(basePath);
+	if (basePath[0] != 0) SetBaseDir(basePath,drive);
 }
 
 void DOS_Drive_Cache::SetLabel(const char* vname,bool cdrom,bool allowupdate) {
@@ -130,11 +130,12 @@ Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir) {
 	return 0;
 }
 
-void DOS_Drive_Cache::SetBaseDir(const char* baseDir) {
+void DOS_Drive_Cache::SetBaseDir(const char* baseDir, DOS_Drive *drive) {
 	if (strlen(baseDir) == 0) return;
 
 	Bit16u id;
 	strcpy(basePath,baseDir);
+	this->drive = drive;
 	if (OpenDir(baseDir,id)) {
 		char* result = 0;
 		ReadDir(id,result);
@@ -143,11 +144,11 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir) {
 #if defined (WIN32) || defined (OS2)
 	bool cdrom = false;
 	char labellocal[256]={ 0 };
-	char drive[4] = "C:\\";
-	drive[0] = basePath[0];
+	char drives[4] = "C:\\";
+	drives[0] = basePath[0];
 #if defined (WIN32)
-	if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
-	UINT test = GetDriveType(drive);
+	if (GetVolumeInformation(drives,labellocal,256,NULL,NULL,NULL,NULL,0)) {
+	UINT test = GetDriveType(drives);
 	if(test == DRIVE_CDROM) cdrom = true;
 #else // OS2
 	//TODO determine wether cdrom or not!
@@ -815,7 +816,7 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 
 	if (!IsCachedIn(dirSearch[id])) {
 		// Try to open directory
-		dir_information* dirp = open_directory(dirPath);
+		void* dirp = drive->opendir(dirPath);
 		if (!dirp) {
 			if (dirSearch[id]) {
 				dirSearch[id]->id = MAX_OPENDIRS;
@@ -826,15 +827,15 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 		// Read complete directory
 		char dir_name[CROSS_LEN];
 		bool is_directory;
-		if (read_directory_first(dirp, dir_name, is_directory)) {
+		if (drive->read_directory_first(dirp, dir_name, is_directory)) {
 			CreateEntry(dirSearch[id], dir_name, is_directory);
-			while (read_directory_next(dirp, dir_name, is_directory)) {
+			while (drive->read_directory_next(dirp, dir_name, is_directory)) {
 				CreateEntry(dirSearch[id], dir_name, is_directory);
 			}
 		}
 
 		// close dir
-		close_directory(dirp);
+		drive->closedir(dirp);
 
 		// Info
 /*		if (!dirp) {

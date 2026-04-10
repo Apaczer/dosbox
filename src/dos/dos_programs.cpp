@@ -298,6 +298,7 @@ public:
 				lastconfigdir.erase(pos);
 				if (lastconfigdir.length())	temp_line = lastconfigdir + CROSS_FILESPLIT + temp_line;
 			}
+			bool is_physfs = temp_line.find(':',((temp_line[0]|0x20) >= 'a' && (temp_line[0]|0x20) <= 'z')?2:0) != std::string::npos;
 			struct stat test;
 			//Win32 : strip tailing backslashes
 			//os2: some special drive check
@@ -306,7 +307,7 @@ public:
 #if defined (WIN32) || defined(OS2)
 			/* Removing trailing backslash if not root dir so stat will succeed */
 			if(temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
-			if (stat(temp_line.c_str(),&test)) {
+			if (!is_physfs && stat(temp_line.c_str(),&test)) {
 #endif
 #if defined(WIN32)
 // Nothing to do here.
@@ -330,7 +331,7 @@ public:
 			}
 			if (failed) {
 #else
-			if (stat(temp_line.c_str(),&test)) {
+			if (!is_physfs && stat(temp_line.c_str(),&test)) {
 				failed = true;
 				Cross::ResolveHomedir(temp_line);
 				//Try again after resolving ~
@@ -342,7 +343,7 @@ public:
 				return;
 			}
 			/* Not a switch so a normal directory/file */
-			if (!S_ISDIR(test.st_mode)) {
+			if (!is_physfs && !S_ISDIR(test.st_mode)) {
 #ifdef OS2
 				HFILE cdrom_fd = 0;
 				ULONG ulAction = 0;
@@ -351,13 +352,26 @@ public:
 					OPEN_FLAGS_DASD | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY, 0L);
 				DosClose(cdrom_fd);
 				if (rc != NO_ERROR && rc != ERROR_NOT_READY) {
-				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
-				return;
-			}
+#if C_HAVE_PHYSFS
+				// Make it a physfs then...
+				is_physfs = true;
+				temp_line.insert(0, 1, ':');
 #else
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
 				return;
 #endif
+			}
+#else
+#if C_HAVE_PHYSFS
+				// Make it a physfs then...
+				is_physfs = true;
+				temp_line.insert(0, 1, ':');
+#else
+				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
+				return;
+#endif
+#endif
+
 			}
 
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
@@ -394,7 +408,15 @@ public:
 					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
 #endif
 				}
-				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
+				if (is_physfs) {
+#if C_HAVE_PHYSFS
+					newdrive  = new physfscdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
+#else
+					LOG_MSG("ERROR:This build does not support physfs");
+#endif
+				} else {
+					newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
+				}
 				// Check Mscdex, if it worked out...
 				switch (error) {
 					case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
@@ -449,6 +471,12 @@ public:
 						WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR"));
 						return;
 					}
+				} else if (is_physfs) {
+#if C_HAVE_PHYSFS
+					newdrive=new physfsDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
+#else
+					LOG_MSG("ERROR:This build does not support physfs");
+#endif
 				} else {
 					newdrive = new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 				}
@@ -464,16 +492,16 @@ public:
 		if (type != "overlay") WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
 		else WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),temp_line.c_str(),drive);
 		/* check if volume label is given and don't allow it to updated in the future */
-		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
+		if (cmd->FindString("-label",label,true)) newdrive->SetLabel(label.c_str(),iscdrom,false);
 		/* For hard drives set the label to DRIVELETTER_Drive.
 		 * For floppy drives set the label to DRIVELETTER_Floppy.
 		 * This way every drive except cdroms should get a label.*/
 		else if(type == "dir" || type == "overlay") { 
 			label = drive; label += "_DRIVE";
-			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
+			newdrive->SetLabel(label.c_str(),iscdrom,false);
 		} else if(type == "floppy") {
 			label = drive; label += "_FLOPPY";
-			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,true);
+			newdrive->SetLabel(label.c_str(),iscdrom,true);
 		}
 		if(type == "floppy") incrementFDD();
 		return;
