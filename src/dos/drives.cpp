@@ -113,7 +113,7 @@ DOS_Drive::DOS_Drive() {
 	info[0]=0;
 }
 
-char * DOS_Drive::GetInfo(void) {
+const char * DOS_Drive::GetInfo(void) {
 	return info;
 }
 
