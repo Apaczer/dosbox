@@ -415,7 +415,7 @@ void *physfsDrive::opendir(const char *name) {
 	char myname[CROSS_LEN];
 	strcpy(myname,name);
 	normalize(myname,basedir);
-	if (!PHYSFS_isDirectory(myname)) return false;
+	if (!PHYSFS_isDirectory(myname)) return NULL;
 
 	struct opendirinfo *oinfo = (struct opendirinfo *)malloc(sizeof(struct opendirinfo));
 	oinfo->files = PHYSFS_enumerateFiles(myname);
