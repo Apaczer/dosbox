@@ -432,7 +432,7 @@ public:
 				autoexec[12].Install(std::string("MOUNT C \"") + line + std::string("\""));
 				autoexec[13].Install("C:");
 				if(secure) autoexec[14].Install("z:\\config.com -securemode");
-				goto nomount;
+				continue;
 			}
 
 			struct stat test;
@@ -474,7 +474,7 @@ public:
 						+ std::string(":\""));
 					autoexec[13].Install("C:");
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
-					goto nomount;
+					continue;
 				}
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
