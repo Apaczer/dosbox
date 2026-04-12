@@ -470,7 +470,7 @@ public:
 				if((strstr(name,".ZIP") != 0) || (strstr(name,".7Z") != 0)) {
 					//TODO:Add more extensions?
 					LOG_MSG("Mounting %s as PHYSFS write directory", buffer);
-					autoexec[12].Install(std::string("MOUNT C \"") + buffer + std::string(":") + orig
+					autoexec[12].Install(std::string("MOUNT C \"") + buffer + std::string(":") + buffer + std::string("/") + orig
 						+ std::string(":\""));
 					autoexec[13].Install("C:");
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
