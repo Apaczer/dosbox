@@ -419,6 +419,9 @@ public:
 		/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
 		bool addexit = control->cmdline->FindExist("-exit",true);
 
+		/* Check for the -dbat switch which causes dosbox call DOSBOX.BAT if present in cwd */
+		bool dosboxbat = control->cmdline->FindExist("-dbat",true);
+
 		/* Check for first command being a directory or file */
 		char buffer[CROSS_LEN+1];
 		char orig[CROSS_LEN+1];
@@ -449,6 +452,10 @@ public:
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
 				if(secure) autoexec[14].Install("z:\\config.com -securemode");
+				if(dosboxbat) {
+					autoexec[15].Install("IF EXIST DOSBOX.BAT CALL DOSBOX.BAT");
+					if(addexit) autoexec[16].Install("exit");
+				}
 				command_found = true;
 			} else {
 				char* name = strrchr(buffer,CROSS_FILESPLIT);
@@ -474,6 +481,8 @@ public:
 						+ std::string(":\""));
 					autoexec[13].Install("C:");
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
+					if(dosboxbat) autoexec[15].Install("IF EXIST DOSBOX.BAT CALL DOSBOX.BAT");
+					if(addexit) autoexec[16].Install("exit");
 					continue;
 				}
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
@@ -497,7 +506,8 @@ public:
 				} else {
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
 					autoexec[15].Install(name);
-					if(addexit) autoexec[16].Install("exit");
+					if(dosboxbat) autoexec[16].Install("IF EXIST DOSBOX.BAT CALL DOSBOX.BAT");
+					if(addexit) autoexec[17].Install("exit");
 				}
 				command_found = true;
 			}

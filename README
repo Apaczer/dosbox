@@ -352,7 +352,7 @@ To be able to use Command Line Parameters:
 The options are valid for all operating systems unless noted in the option
 description:
 
-dosbox [name] [-exit] [-c command] [-fullscreen] [-userconf]
+dosbox [name] [-exit] [-dbat] [-c command] [-fullscreen] [-userconf]
        [-conf congfigfilelocation] [-lang languagefilelocation]
        [-machine machine type] [-noconsole] [-startmapper] [-noautoexec]
        [-securemode] [-scaler scaler | -forcescaler scaler] [-version]
