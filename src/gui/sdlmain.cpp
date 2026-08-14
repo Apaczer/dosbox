@@ -52,6 +52,7 @@
 #include "render.h"
 #ifdef DINGUX
 #include "sdl_downscaler.h"
+#include "sdl_vkeyboard.h"
 #endif
 
 #include "../save_state.h"
@@ -292,6 +293,9 @@ struct SDL_Block {
 #endif
 	struct {
 		SDL_Surface * surface;
+#ifdef DINGUX
+		SDL_Surface * buffer;
+#endif
 #if C_DDRAW
 		RECT rect_dest;
 		RECT rect_src;
@@ -821,6 +825,12 @@ Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,G
 		SDL_FreeSurface(sdl.blit.surface);
 		sdl.blit.surface=0;
 	}
+#ifdef DINGUX
+	if (sdl.blit.buffer) {
+		SDL_FreeSurface(sdl.blit.buffer);
+		sdl.blit.buffer=0;
+	}
+#endif
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 dosurface:
@@ -913,12 +923,19 @@ dosurface:
 									sdl.desktop.bpp,
 									(flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE);
 
+		sdl.blit.buffer=SDL_CreateRGBSurface(SDL_SWSURFACE, // for mixing menu and game screen
+									sdl.desktop.full.width,
+									sdl.desktop.full.height,
+									sdl.desktop.bpp,
+									0,0,0,0);
+
 		GFX_PDownscale = NULL;
 		if(width <= sdl.desktop.full.width && height <= sdl.desktop.full.height) {
 			sdl.clip.w=width;
 			sdl.clip.h=height;
 			sdl.clip.x=(Sint16)((sdl.desktop.full.width-width)/2);
 			sdl.clip.y=(Sint16)((sdl.desktop.full.height-height)/2);
+			sdl.blit.surface=SDL_CreateRGBSurface(SDL_SWSURFACE,width,height,bpp,0,0,0,0);
 		} else {
 			sdl.clip.w=0; sdl.clip.h=0; sdl.clip.x=0; sdl.clip.y=0;
 			sdl.blit.surface=SDL_CreateRGBSurface(SDL_SWSURFACE,width,height,bpp,0,0,0,0);
@@ -1471,14 +1488,26 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #ifdef DINGUX
 	case SCREEN_SURFACE_DINGUX:
-		if (sdl.blit.surface) {
-			if(GFX_PDownscale) {
-				GFX_PDOWNSCALE(sdl.blit.surface, sdl.surface);
+		if(!vkeyb_active && !vkeyb_last) {
+			if (sdl.blit.surface) {
+				if(GFX_PDownscale) {
+					GFX_PDOWNSCALE(sdl.blit.surface, sdl.surface);
+				} else {
+					SDL_BlitSurface(sdl.blit.surface, 0, sdl.surface, &sdl.clip);
+				} 
 			} else {
-				SDL_BlitSurface( sdl.blit.surface, 0, sdl.surface, &sdl.clip );
+				if(SDL_MUSTLOCK(sdl.surface)) SDL_UnlockSurface(sdl.surface);
 			}
 		} else {
-			if(SDL_MUSTLOCK(sdl.surface)) SDL_UnlockSurface(sdl.surface);
+			// assume that sdl.blit.surface is set
+			if(GFX_PDownscale) {
+				GFX_PDOWNSCALE(sdl.blit.surface, sdl.blit.buffer);
+			} else {
+				SDL_BlitSurface(sdl.blit.surface, 0, sdl.blit.buffer,  &sdl.clip);
+			}
+			VKEYB_BlitVkeyboard(sdl.blit.buffer);
+			SDL_BlitSurface(sdl.blit.buffer, 0, sdl.surface, 0);
+			VKEYB_CleanVkeyboard(sdl.blit.buffer);
 		}
 		SDL_Flip(sdl.surface);
 		break;
@@ -1558,6 +1587,13 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	}
 }
 
+void GFX_ForceUpdate()
+{
+	if(sdl.updating == false) {
+		sdl.updating=true;
+		GFX_EndUpdate(NULL);
+	}
+}
 
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 	/* I should probably not change the GFX_PalEntry :) */
@@ -2077,6 +2113,7 @@ static void GUI_StartUp(Section * sec) {
 		sdl.mouse.autolock = true;
 		GFX_CaptureMouse();
 		#endif
+		VKEYB_Init(sdl.desktop.bpp);
 	}
 #endif
 	/* Get some Event handlers */
@@ -2335,6 +2372,12 @@ void GFX_Events() {
 			}
 #endif
 		default:
+#ifdef DINGUX
+			// a hack to implement virtual keyboard
+			if(sdl.desktop.type == SCREEN_SURFACE_DINGUX) {
+				if(!VKEYB_CheckEvent(&event)) break; // else event is modified
+			}
+#endif
 			void MAPPER_CheckEvent(SDL_Event * event);
 			MAPPER_CheckEvent(&event);
 		}
