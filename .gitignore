@@ -33,3 +33,4 @@ mapper.txt
 compile
 config.h.in~
 configure~
+config.h
