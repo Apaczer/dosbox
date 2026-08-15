@@ -1804,6 +1804,10 @@ void DOS_SetupPrograms(void) {
 		"\033[33;1mCTRL-F11\033[0m    : Slow down emulation (Decrease DOSBox Cycles).\n"
 		"\033[33;1mCTRL-F12\033[0m    : Speed up emulation (Increase DOSBox Cycles).\n"
 		"\033[33;1mALT-F12\033[0m     : Unlock speed (turbo button/fast forward).\n"
+		"\033[33;1mLALT-F5\033[0m     : Save to current slot.\n"
+		"\033[33;1mLALT-F9\033[0m     : Load state from current slot.\n"
+		"\033[33;1mLALT-F6\033[0m     : Switch to previous slot.\n"
+		"\033[33;1mLALT-F7\033[0m     : Switch to next slot.\n"
 		);
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");

@@ -1095,6 +1095,10 @@ CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12      Speed up emulation (Increase DOSBox Cycles)*.
 ALT-F12       Unlock speed (turbo button/fast forward)**.
+LALT-F5       Save to current slot.
+LALT-F9       Load state from current slot.
+LALT-F6       Switch to previous slot. (MAX of 10 - slots in circular arrangement).
+LALT-F7       Switch to next slot. (MAX of 10 - slots in circular arrangement).
 CTRL-ALT-HOME Restart DOSBox.
 F11, ALT-F11  (machine=cga) change tint in NTSC output modes***.
 F11           (machine=hercules) cycle through amber, green, white colouring***.
