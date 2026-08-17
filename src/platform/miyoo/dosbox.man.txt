@@ -1,0 +1,38 @@
+[About]
+
+DOSBox can be configured to run a wide range of DOS games,
+from CGA/Tandy/PCjr classics up to games from the Quake era.
+
+[Controls] 
+(During emulation:
+D-PAD - directional keyboard keys
+A - 
+B - 
+Y - 
+X - 
+L - enable/disable on-screen-keyboard
+R - 
+HOME - quit DOSBox
+START - Modifier 2
+SELECT - Modifier 1
+SELECT + R1 - Load state
+SELECT + L1 - Save state
+SELECT + L2 - Previous save slot (max 10 in circular decrease)
+SELECT + R2 - Next save slot (max 10 in circular increase)
+SELECT + A - increase Frameskip
+SELECT + B - decrease Frameskip
+SELECT + Y - increase Cycles
+SELECT + X - decrease Cycles
+
+(While OSK is displayed:
+B - press a key
+A - hold/release a pressed key
+X - move keyboard on screen with directional keys
+Y - toggle between transparent and opaque keyboard
+
+[Usage]
+To austart directly an app while launching DOSBox pass `-dbat` option that is if u have present DOSBOX.BAT script,
+inside your app's top directory (use dosbox_setup.sh utility to generate one)
+
+Adjusting the frame rate:
+Set the framerate and approriate cycles value for smooth playback

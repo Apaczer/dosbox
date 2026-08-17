@@ -181,7 +181,12 @@ int VKEYB_CheckEvent(SDL_Event *event)
 	bool update_screen = false;
 	bool keystate = (event->type == SDL_KEYDOWN) ? true : false;
 
+#ifdef MIYOO
+	Uint8 *keys = SDL_GetKeyState(NULL);
+	if(keystate && event->key.keysym.sym == SDLK_TAB && !keys[SDLK_ESCAPE]) { // L1 pressed & SELECT released (to not interfere with modifier held)
+#else
 	if(keystate && event->key.keysym.sym == SDLK_TAB) {
+#endif
 		vkeyb_active ^= 1;
 		if(!vkeyb_active) vkeyb_last = true;
 		ret = 0;

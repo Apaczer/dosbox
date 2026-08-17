@@ -1610,6 +1610,35 @@ public:
 		case MK_home: 
 			key=SDLK_HOME; 
 			break;
+#ifdef MIYOO
+		case MK_rctrl: // RESET
+			key=SDLK_RCTRL;
+			break;
+		case MK_lctrl: // B
+			key=SDLK_LCTRL;
+			break;
+		case MK_lalt: // A
+			key=SDLK_LALT;
+			break;
+		case MK_lshift: // X
+			key=SDLK_LSHIFT;
+			break;
+		case MK_space: // SPACE
+			key=SDLK_SPACE;
+			break;
+		case MK_tab: // L1
+			key=SDLK_TAB;
+			break;
+		case MK_backspace: // R1
+			key=SDLK_BACKSPACE;
+			break;
+		case MK_pageup: // L2
+			key=SDLK_PAGEUP;
+			break;
+		case MK_pagedown: // R2
+			key=SDLK_PAGEDOWN;
+			break;
+#endif
 		}
 		sprintf(buf,"%s \"key %" sBitfs(d) "%s%s%s\"",
 			entry,
@@ -2095,10 +2124,15 @@ static void CreateDefaultBinds(void) {
 		CreateStringBind(buffer);
 		i++;
 	}
+#ifdef MIYOO
+	sprintf(buffer,"mod_1 \"key %d\"",SDLK_ESCAPE);CreateStringBind(buffer); // SELECT
+	sprintf(buffer,"mod_2 \"key %d\"",SDLK_RETURN);CreateStringBind(buffer); // START
+#else
 	sprintf(buffer,"mod_1 \"key %d\"",SDLK_RCTRL);CreateStringBind(buffer);
 	sprintf(buffer,"mod_1 \"key %d\"",SDLK_LCTRL);CreateStringBind(buffer);
 	sprintf(buffer,"mod_2 \"key %d\"",SDLK_RALT);CreateStringBind(buffer);
 	sprintf(buffer,"mod_2 \"key %d\"",SDLK_LALT);CreateStringBind(buffer);
+#endif
 	for (CHandlerEventVector_it hit=handlergroup.begin();hit!=handlergroup.end();hit++) {
 		(*hit)->MakeDefaultBind(buffer);
 		CreateStringBind(buffer);

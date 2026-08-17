@@ -487,10 +487,17 @@ static void DOSBOX_RealInit(Section * sec) {
 	}
 
   //add support for loading/saving game states
+#ifdef MIYOO
+  MAPPER_AddHandler(SaveGameState, MK_tab, MMOD1,"savestate","Save State"); // SELECT+L1
+  MAPPER_AddHandler(LoadGameState, MK_backspace, MMOD1,"loadstate","Load State"); // SELECT+R1
+  MAPPER_AddHandler(PreviousSaveSlot, MK_pageup, MMOD1,"prevslot","Prev. Slot"); // SELECT+L2
+  MAPPER_AddHandler(NextSaveSlot, MK_pagedown, MMOD1,"nextslot","Next Slot"); // SELECT+R2
+#else
   MAPPER_AddHandler(SaveGameState, MK_f5, MMOD2,"savestate","Save State");
   MAPPER_AddHandler(LoadGameState, MK_f9, MMOD2,"loadstate","Load State");
   MAPPER_AddHandler(PreviousSaveSlot, MK_f6, MMOD2,"prevslot","Prev. Slot");
   MAPPER_AddHandler(NextSaveSlot, MK_f7, MMOD2,"nextslot","Next Slot");
+#endif
 	
   std::string mtype(section->Get_string("machine"));
 	svgaCard = SVGA_None;

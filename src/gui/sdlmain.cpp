@@ -2117,7 +2117,11 @@ static void GUI_StartUp(Section * sec) {
 	}
 #endif
 	/* Get some Event handlers */
+#ifdef MIYOO
+	MAPPER_AddHandler(KillSwitch,MK_rctrl,0,"shutdown","ShutDown"); // RESET/HOME
+#else
 	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
+#endif
 	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
 	MAPPER_AddHandler(Restart,MK_home,MMOD1|MMOD2,"restart","Restart");
