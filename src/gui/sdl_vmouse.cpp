@@ -89,7 +89,12 @@ bool VMOUSE_CheckEvent(SDL_Event *event)
     if(event->key.keysym.sym == SDLK_RETURN) return false;
     if(event->key.keysym.sym == SDLK_ESCAPE) return false;
     
+#ifdef MIYOO
+	Uint8 *keys = SDL_GetKeyState(NULL);
+	if(event->key.keysym.sym == SDLK_BACKSPACE && !keys[SDLK_ESCAPE]) // R1 pressed & SELECT released (to not interfere with modifier held)
+#else
     if(event->key.keysym.sym == SDLK_BACKSPACE)
+#endif
     {
         if(event->type == SDL_KEYDOWN) VMOUSE_SetEnabled(!VMOUSE_IsEnabled());
         

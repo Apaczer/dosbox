@@ -11,7 +11,7 @@ B -
 Y - 
 X - 
 L - enable/disable on-screen-keyboard
-R - 
+R - enable/disable virtual-mouse
 HOME - quit DOSBox
 START - Modifier 2
 SELECT - Modifier 1
