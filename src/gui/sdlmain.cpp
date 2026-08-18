@@ -53,6 +53,7 @@
 #ifdef DINGUX
 #include "sdl_downscaler.h"
 #include "sdl_vkeyboard.h"
+#include "sdl_vmouse.h"
 #endif
 
 #include "../save_state.h"
@@ -1495,6 +1496,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				} else {
 					SDL_BlitSurface(sdl.blit.surface, 0, sdl.surface, &sdl.clip);
 				} 
+				VMOUSE_BlitVMouse(sdl.surface);
 			} else {
 				if(SDL_MUSTLOCK(sdl.surface)) SDL_UnlockSurface(sdl.surface);
 			}
@@ -2114,6 +2116,7 @@ static void GUI_StartUp(Section * sec) {
 		GFX_CaptureMouse();
 		#endif
 		VKEYB_Init(sdl.desktop.bpp);
+		VMOUSE_Init(sdl.desktop.bpp);
 	}
 #endif
 	/* Get some Event handlers */
@@ -2380,6 +2383,7 @@ void GFX_Events() {
 			// a hack to implement virtual keyboard
 			if(sdl.desktop.type == SCREEN_SURFACE_DINGUX) {
 				if(!VKEYB_CheckEvent(&event)) break; // else event is modified
+				if(VMOUSE_CheckEvent(&event)) break;
 			}
 #endif
 			void MAPPER_CheckEvent(SDL_Event * event);
