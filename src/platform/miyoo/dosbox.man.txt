@@ -3,6 +3,10 @@
 DOSBox can be configured to run a wide range of DOS games,
 from CGA/Tandy/PCjr classics up to games from the Quake era.
 
+[Extra Options]
+Here is a list of extra CLI options for DINGUX platform (others accordingly to main README)
+(-hwinput: disable OSK & virtual-mouse hotkeys so you could use devices real HW input 
+
 [Controls] 
 (During emulation:
 D-PAD - directional keyboard keys

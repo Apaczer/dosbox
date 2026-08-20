@@ -2381,7 +2381,8 @@ void GFX_Events() {
 		default:
 #ifdef DINGUX
 			// a hack to implement virtual keyboard
-			if(sdl.desktop.type == SCREEN_SURFACE_DINGUX) {
+			if(sdl.desktop.type == SCREEN_SURFACE_DINGUX
+			  && !(control->cmdline->FindExist("-hwinput"))) { // useful if using real kbd/mouse
 				if(!VKEYB_CheckEvent(&event)) break; // else event is modified
 				if(VMOUSE_CheckEvent(&event)) break;
 			}
