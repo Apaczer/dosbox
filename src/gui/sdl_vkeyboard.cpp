@@ -183,7 +183,7 @@ int VKEYB_CheckEvent(SDL_Event *event)
 
 #ifdef MIYOO
 	Uint8 *keys = SDL_GetKeyState(NULL);
-	if(keystate && event->key.keysym.sym == SDLK_TAB && !keys[SDLK_ESCAPE]) { // L1 pressed & SELECT released (to not interfere with modifier held)
+	if(keystate && event->key.keysym.sym == SDLK_BACKSPACE && !keys[SDLK_ESCAPE]) { // R1 pressed & SELECT released (to not interfere with modifier held)
 #else
 	if(keystate && event->key.keysym.sym == SDLK_TAB) {
 #endif
