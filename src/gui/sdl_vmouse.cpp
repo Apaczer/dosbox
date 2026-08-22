@@ -21,6 +21,7 @@ static struct {
 } vmouse;
 
 extern bool vkeyb_active;
+bool vmouse_last = false;
 
 void GFX_ForceUpdate(); // in sdlmain.cpp
 
@@ -71,6 +72,7 @@ void VMOUSE_SetEnabled(bool enabled)
         vmouse.right = false;
         vmouse.up = false;
         vmouse.down = false;
+        vmouse_last = true;
     }
     
     GFX_ForceUpdate();
@@ -249,5 +251,20 @@ void VMOUSE_BlitVMouse(SDL_Surface *surface)
         position.h = (surface->h > surface->w) ? vmouse.icon->h * 2 : vmouse.icon->h;
 
         SDL_BlitSurface((surface->h > surface->w) ? load_icon2x() : vmouse.icon, NULL, surface, &position);
+    }
+
+}
+
+void VMOUSE_CleanVmouse(SDL_Surface *surface)
+{
+	SDL_Rect dest;
+	dest.x = surface->w - vmouse.icon->w;
+	dest.y = surface->h - ((surface->h > surface->w) ? vmouse.icon->h * 2 : vmouse.icon->h);
+	dest.w = vmouse.icon->w;
+	dest.h = vmouse.icon->h;
+
+    if(vmouse_last){
+	    SDL_FillRect(surface, &dest, 0);
+        vmouse_last = false;
     }
 }

@@ -1491,6 +1491,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	case SCREEN_SURFACE_DINGUX:
 		if(!vkeyb_active && !vkeyb_last) {
 			if (sdl.blit.surface) {
+				VMOUSE_CleanVmouse(sdl.surface);
 				if(GFX_PDownscale) {
 					GFX_PDOWNSCALE(sdl.blit.surface, sdl.surface);
 				} else {
