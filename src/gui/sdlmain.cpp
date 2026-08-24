@@ -54,6 +54,8 @@
 #include "sdl_downscaler.h"
 #include "sdl_vkeyboard.h"
 #include "sdl_vmouse.h"
+#include <SDL/SDL_gfxPrimitives.h>
+#include <SDL/SDL_gfxPrimitives_font.h>
 #endif
 
 #include "../save_state.h"
@@ -472,6 +474,7 @@ extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
+bool osd_active=false;
 
 void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
 	char title[200] = { 0 };
@@ -1369,6 +1372,59 @@ void GFX_RestoreMode(void) {
 	GFX_UpdateSDLCaptureState();
 }
 
+bool osd_last = false;
+
+void OSD_DrawStats() {
+	uint16_t screen_w = sdl.surface->w;
+	uint16_t screen_h = sdl.surface->h;
+	char osd_text[256];
+	SDL_Rect bg;
+    bg.x = 0;
+    bg.y = screen_h - 16;
+    bg.w = screen_w;
+    bg.h = 16;
+	
+	snprintf(osd_text, sizeof(osd_text), "CPU speed=%d, Frameskip=%d", CPU_CycleMax, render.frameskip.max);
+	SDL_FillRect(sdl.surface, &bg, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+	stringRGBA(sdl.surface, 8, (screen_h - 12), osd_text, 255, 255, 255, 255);
+}
+
+bool OSD_CheckEvent(SDL_Event *event)
+{
+    // Don't block buttons we're not using
+    if(event->key.keysym.sym == SDLK_RETURN) return false;
+    if(event->key.keysym.sym == SDLK_ESCAPE) return false;
+
+#ifdef MIYOO
+	Uint8 *keys = SDL_GetKeyState(NULL);
+	if(event->key.keysym.sym == SDLK_SPACE && keys[SDLK_ESCAPE]) // Y pressed & SELECT held
+#else
+    if(event->key.keysym.sym == SDLK_HOME)
+#endif
+    {
+        if(event->type == SDL_KEYDOWN) osd_active ^= 1;
+		if(!osd_active) osd_last = true;
+        
+        return true;
+    }
+
+	return false;
+}
+
+void OSD_CleanSurf()
+{
+	SDL_Rect dest;
+    dest.x = 0;
+    dest.y = sdl.surface->h - 16;
+    dest.w = sdl.surface->w;
+    dest.h = 16;
+
+    if(osd_last){
+	    SDL_FillRect(sdl.surface, &dest, 0);
+        osd_last = false;
+    }
+}
+
 
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	if (!sdl.active || sdl.updating)
@@ -1491,6 +1547,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	case SCREEN_SURFACE_DINGUX:
 		if(!vkeyb_active && !vkeyb_last) {
 			if (sdl.blit.surface) {
+				OSD_CleanSurf();
 				VMOUSE_CleanVmouse(sdl.surface);
 				if(GFX_PDownscale) {
 					GFX_PDOWNSCALE(sdl.blit.surface, sdl.surface);
@@ -1503,6 +1560,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			}
 		} else {
 			// assume that sdl.blit.surface is set
+			OSD_CleanSurf();
 			if(GFX_PDownscale) {
 				GFX_PDOWNSCALE(sdl.blit.surface, sdl.blit.buffer);
 			} else {
@@ -1512,6 +1570,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			SDL_BlitSurface(sdl.blit.buffer, 0, sdl.surface, 0);
 			VKEYB_CleanVkeyboard(sdl.blit.buffer);
 		}
+		if(osd_active) OSD_DrawStats();
 		SDL_Flip(sdl.surface);
 		break;
 #endif
@@ -2388,6 +2447,7 @@ void GFX_Events() {
 				if(VMOUSE_CheckEvent(&event)) break;
 			}
 #endif
+			if(OSD_CheckEvent(&event)) break;
 			void MAPPER_CheckEvent(SDL_Event * event);
 			MAPPER_CheckEvent(&event);
 		}
