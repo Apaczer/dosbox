@@ -406,6 +406,7 @@ void notifyError(const std::string& message)
 
 void SetGameState(int value) {
     currentSlot.set(value);
+    GetSaveSlot(value);
 }
 
 void SaveGameState(bool pressed) {
@@ -445,6 +446,7 @@ void NextSaveSlot(bool pressed) {
     if (!pressed) return;
 
     currentSlot.next();
+    GetSaveSlot(currentSlot);
 
     const bool emptySlot = SaveState::instance().isEmpty(currentSlot);
     LOG_MSG("Active save slot: %d %s", currentSlot + 1,  emptySlot ? "[Empty]" : "");
@@ -455,6 +457,7 @@ void PreviousSaveSlot(bool pressed) {
     if (!pressed) return;
 
     currentSlot.previous();
+    GetSaveSlot(currentSlot);
 
     const bool emptySlot = SaveState::instance().isEmpty(currentSlot);
     LOG_MSG("Active save slot: %d %s", currentSlot + 1, emptySlot ? "[Empty]" : "");

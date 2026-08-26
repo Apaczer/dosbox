@@ -1372,6 +1372,12 @@ void GFX_RestoreMode(void) {
 	GFX_UpdateSDLCaptureState();
 }
 
+static int save_slot = 1;
+
+void GetSaveSlot(int slot) {
+	save_slot = slot + 1;
+}
+
 bool osd_last = false;
 
 void OSD_DrawStats() {
@@ -1384,7 +1390,7 @@ void OSD_DrawStats() {
     bg.w = screen_w;
     bg.h = 16;
 	
-	snprintf(osd_text, sizeof(osd_text), "CPU speed=%d, Frameskip=%d", CPU_CycleMax, render.frameskip.max);
+	snprintf(osd_text, sizeof(osd_text), "CPUspeed=%d|Frameskip=%d|SaveSlot=%i", CPU_CycleMax, render.frameskip.max, save_slot);
 	SDL_FillRect(sdl.surface, &bg, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
 	stringRGBA(sdl.surface, 8, (screen_h - 12), osd_text, 255, 255, 255, 255);
 }
