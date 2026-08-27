@@ -12,7 +12,7 @@ Here is a list of extra CLI options for DINGUX platform (others accordingly to m
 D-PAD - directional keyboard keys
 A - 
 B - 
-Y - 
+Y - show on-screen-display info
 X - 
 L1 - enable/disable virtual-mouse
 R1 - enable/disable on-screen-keyboard
@@ -28,15 +28,49 @@ SELECT + B - decrease Frameskip
 SELECT + Y - increase Cycles
 SELECT + X - decrease Cycles
 
-(While OSK is displayed:
+(On-screen-keyboard
 B - press a key
 A - hold/release a pressed key
 X - move keyboard on screen with directional keys
 Y - toggle between transparent and opaque keyboard
 
+(Virtual mouse
+Press L1 to toggle vmouse. D-pad moves
+the pointer. The face buttons act as mouse buttons:
+
+D-PAD - moves the cursor
+A/Y  - right button
+B  - left button
+X  - middle button
+
+The virtual mouse toggle is disabled while the OSK is open.
+
 [Usage]
+(Direct start:
+Launch approriate .BAT/.EXE/.COM file to run a game/app
+
+(Manual start:
+1. Put a DOS game or application in its own directory.
+2. Start DOSBox and mount that directory from the DOS prompt, for example:
+
+   mount c /path/to/game
+   c:
+   GAME.EXE
+
+(Auto-start:
 To austart directly an app while launching DOSBox pass `-dbat` option that is if u have present DOSBOX.BAT script,
 inside your app's top directory (use dosbox_setup.sh utility to generate one)
 
 Adjusting the frame rate:
 Set the framerate and approriate cycles value for smooth playback
+
+[Configuration]
+
+DOSBox stores input mappings in the file selected by mapperfile in
+dosbox.conf. The Miyoo defaults are created only when that mapper file does
+not already exist; remove or rename a stale mapper file to restore the
+default bindings.
+
+The recommended video output for this build is surface_dingux, which is also
+the default. Other configuration options and command-line switches are
+documented in the main README.
