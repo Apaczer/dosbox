@@ -474,7 +474,6 @@ extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
-bool osd_active=false;
 
 void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
 	char title[200] = { 0 };
@@ -1378,7 +1377,15 @@ void GetSaveSlot(int slot) {
 	save_slot = slot + 1;
 }
 
+bool osd_active=false;
 bool osd_last = false;
+
+static void ActiveOSD(bool pressed) {
+	if (!pressed)
+		return;
+	osd_active ^= 1;
+	if(!osd_active) osd_last = true;
+}
 
 void OSD_DrawStats() {
 	uint16_t screen_w = sdl.surface->w;
@@ -1393,28 +1400,6 @@ void OSD_DrawStats() {
 	snprintf(osd_text, sizeof(osd_text), "CPUspeed=%d|Frameskip=%d|SaveSlot=%i", CPU_CycleMax, render.frameskip.max, save_slot);
 	SDL_FillRect(sdl.surface, &bg, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
 	stringRGBA(sdl.surface, 8, (screen_h - 12), osd_text, 255, 255, 255, 255);
-}
-
-bool OSD_CheckEvent(SDL_Event *event)
-{
-    // Don't block buttons we're not using
-    if(event->key.keysym.sym == SDLK_RETURN) return false;
-    if(event->key.keysym.sym == SDLK_ESCAPE) return false;
-
-#ifdef MIYOO
-	Uint8 *keys = SDL_GetKeyState(NULL);
-	if(event->key.keysym.sym == SDLK_SPACE && keys[SDLK_ESCAPE]) // Y pressed & SELECT held
-#else
-    if(event->key.keysym.sym == SDLK_HOME)
-#endif
-    {
-        if(event->type == SDL_KEYDOWN) osd_active ^= 1;
-		if(!osd_active) osd_last = true;
-        
-        return true;
-    }
-
-	return false;
 }
 
 void OSD_CleanSurf()
@@ -1815,6 +1800,7 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 
 //extern void UI_Run(bool);
 void Restart(bool pressed);
+void ActiveOSD(bool pressed);
 
 static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
@@ -2186,6 +2172,13 @@ static void GUI_StartUp(Section * sec) {
 	}
 #endif
 	/* Get some Event handlers */
+#ifdef DINGUX
+#ifdef MIYOO
+	MAPPER_AddHandler(ActiveOSD,MK_space,MMOD2,"osd","OSD"); // Y + START
+#else
+	MAPPER_AddHandler(ActiveOSD,MK_scrolllock,0,"osd","OSD");
+#endif
+#endif
 #ifdef MIYOO
 	MAPPER_AddHandler(KillSwitch,MK_rctrl,0,"shutdown","ShutDown"); // RESET/HOME
 #else
@@ -2453,7 +2446,6 @@ void GFX_Events() {
 				if(VMOUSE_CheckEvent(&event)) break;
 			}
 #endif
-			if(OSD_CheckEvent(&event)) break;
 			void MAPPER_CheckEvent(SDL_Event * event);
 			MAPPER_CheckEvent(&event);
 		}
