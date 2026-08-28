@@ -233,6 +233,31 @@ fi
 AC_C_BIGENDIAN
 
 #Features to enable/disable
+AH_TEMPLATE(DINGUX,[Define to 1 for Dingux platform])
+AH_TEMPLATE(MIYOO,[Define to 1 for MiyooCFW platform])
+AC_ARG_ENABLE(platform,AC_HELP_STRING([--enable-platform=dingux|miyoo],[Target platform (dingux, miyoo)]),,enable_platform=no)
+AC_MSG_CHECKING(for target platform)
+case "$enable_platform" in
+  dingux)
+    AC_MSG_RESULT([dingux])
+    AC_DEFINE(DINGUX,1)
+    LIBS="$LIBS -lSDL_gfx -lSDL_image"
+    ;;
+  miyoo)
+    AC_MSG_RESULT([miyoo])
+    AC_DEFINE(DINGUX,1)
+    CPPFLAGS="$CPPFLAGS -DMIYOO -DLOWMEM"
+    CXXFLAGS="$CXXFLAGS -g -O2 -march=armv5te -mtune=arm926ej-s -pipe -fno-builtin -fno-common -ffast-math -fomit-frame-pointer -fexpensive-optimizations -frename-registers"
+    LIBS="$LIBS -lSDL_gfx -lSDL_image"
+    ;;
+  no)
+    AC_MSG_RESULT([none])
+    ;;
+  *)
+    AC_MSG_RESULT([unknown ($enable_platform)])
+    AC_MSG_ERROR([Unknown platform: $enable_platform. Supported platforms are: dingux, miyoo])
+    ;;
+esac
 AH_TEMPLATE(C_DEBUG,[Define to 1 to enable internal debugger, requires libcurses])
 AH_TEMPLATE(C_HEAVY_DEBUG,[Define to 1 to enable heavy debugging, also have to enable C_DEBUG])
 AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
