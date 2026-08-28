@@ -1377,6 +1377,7 @@ void GetSaveSlot(int slot) {
 	save_slot = slot + 1;
 }
 
+#ifdef DINGUX
 bool osd_active=false;
 bool osd_last = false;
 
@@ -1415,6 +1416,7 @@ void OSD_CleanSurf()
         osd_last = false;
     }
 }
+#endif
 
 
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
@@ -1800,7 +1802,9 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 
 //extern void UI_Run(bool);
 void Restart(bool pressed);
+#ifdef DINGUX
 void ActiveOSD(bool pressed);
+#endif
 
 static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
