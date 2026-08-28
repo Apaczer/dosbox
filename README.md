@@ -30,10 +30,14 @@ This is a downstream fork of SVN code-0 trunk (r4494)
 
 		make -j$(nproc)
 
+  - pkg distribute
+
+		gm2xpkg src/platform/miyoo/pkg.cfg
+
 
 ---
-for SDL_sound to work (needed for "gus"?), you have to add following libs & edit config.h
-LIBS+="-lSDL_sound -lspeex -logg"
+for SDL_sound to work (needed for "gus"?), you have to add following libs
+LIBS+="-lSDL_sound -lspeex -logg" (due to may be missing pkg-config macro in SDL_sound repo) & edit config.h by adding define
 
 ----
 edit dosbox.conf & add default mapper
