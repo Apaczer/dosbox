@@ -10,15 +10,22 @@ Here is a list of extra CLI options for DINGUX platform (others accordingly to m
 [Controls] 
 (During emulation:
 D-PAD - directional keyboard keys
-A - 
-B - 
-Y - show on-screen-display info
-X - 
+A - LALT
+B - LCTRL
+Y - SPACE
+X - LSHIFT
 L1 - enable/disable virtual-mouse
 R1 - enable/disable on-screen-keyboard
+L2 - PAGEUP
+R2 - PAGEDOWN
+L3 - RALT
+R3 - RSHIFT
 HOME - quit DOSBox
-START - Modifier 2
-SELECT - Modifier 1
+START + Y - show on-screen-display info
+START + A - fast-forward hold ON
+START + B - fast-forward toggle ON/OFF
+START - ENTER (Modifier 2)
+SELECT - ESCAPE (Modifier 1)
 SELECT + R1 - Load state
 SELECT + L1 - Save state
 SELECT + L2 - Previous save slot (max 10 in circular decrease)

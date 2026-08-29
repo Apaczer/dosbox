@@ -479,9 +479,15 @@ static void DOSBOX_RealInit(Section * sec) {
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 
+#ifdef MIYOO
+	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_lalt, MMOD2,"speedlock","Speedlock");
+
+	MAPPER_AddHandler(DOSBOX_UnlockSpeed2, MK_lctrl, MMOD2,"speedlock2","Speedlock2");
+#else
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed2, MK_f12, MMOD1|MMOD2,"speedlock2","Speedlock2");
+#endif
 
 	std::string cmd_machine;
 	if (control->cmdline->FindString("-machine",cmd_machine,true)){
