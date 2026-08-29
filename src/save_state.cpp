@@ -149,6 +149,7 @@ void SaveState::save(size_t slot) { //throw (Error)
 	std::string path;
 	bool Get_Custom_SaveDir(std::string& savedir);
 	if(Get_Custom_SaveDir(path)) {
+		Cross::CreateDir(path);
 		path+=CROSS_FILESPLIT;
 	} else {
 		extern std::string capturedir;
