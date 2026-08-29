@@ -9,22 +9,7 @@ This is a downstream fork of SVN code-0 trunk (r4494)
   - configure
   
   		./autogen.sh
-		./configure --host=arm-linux --disable-x11 --enable-core-inline \
-		CPPFLAGS="-DMIYOO -DDINGUX -DLOWMEM" \
-		CXXFLAGS="-g -O2 -march=armv5te -mtune=arm926ej-s -pipe -fno-builtin -fno-common -ffast-math -fomit-frame-pointer -fexpensive-optimizations -frename-registers" \
-		LIBS="$(pkg-config --libs sdl SDL_gfx SDL_image)"
-
-  - compile
-
-		make -j$(nproc)
-
-- Native DIGNUX test build
-  - configure
-
-  		./autogen.sh
-		./configure \
-		CPPFLAGS="-DDINGUX" \
-		LIBS="$(pkg-config --libs sdl SDL_gfx SDL_image)"
+		./configure --host=arm-linux --disable-x11 --enable-core-inline --enable-platform=miyoo
 
   - compile
 
@@ -34,12 +19,25 @@ This is a downstream fork of SVN code-0 trunk (r4494)
 
 		gm2xpkg src/platform/miyoo/pkg.cfg
 
+- Native DINGUX test build
+  - configure
+
+  		./autogen.sh
+		./configure --enable-platform=dingux
+
+  - compile
+
+		make -j$(nproc)
 
 ---
 for SDL_sound to work (needed for "gus"?), you have to add following libs
 LIBS+="-lSDL_sound -lspeex -logg" (due to may be missing pkg-config macro in SDL_sound repo) & edit config.h by adding define
 
 ----
-edit dosbox.conf & add default mapper
+edit dosbox-*.conf & add mapper-*.txt file for your needs
 
-mapperfile=mapper.txt
+## CREDITS
+- @dmitrysmagin for first DINGUX port (to GCW0) and Virtual Keyboard implementation and TBH base src for MIYOO port which ppl used for years unknowingly.
+- ppl from vogons.org forum and their original patches for PhysFS archive (Moe) and savestate (ZenJu)
+- dosbox-staging team for their work on cleaning up of DOSBox source code.
+- original authors & maintainers of upstream DOSBox svn
