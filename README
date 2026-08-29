@@ -56,6 +56,7 @@ this guide: https://www.vogons.org/viewtopic.php?t=8933
 ===============
 
 START:      How to start?
+ZIP:        How to mount archive format?
 AUTOMATION: Do I always have to type these "mount" commands?
 FULLSCREEN: How do I change to fullscreen?
 FULLSCREEN: My fullscreen is too large.
@@ -89,6 +90,37 @@ START: How to start?
     To change to the drive mounted like above, type "C:". If everything went
     fine, DOSBox will display the prompt "C:\>".
 
+ZIP: How to mount archive format?
+    "dosbox x.zip:" will do the same as if you extracted x.zip into subdir "x" and ran "dosbox x",
+    i.e. it executes "mount c x.zip:/" automatically.
+    general syntax of mount stays the same, -label and -size are supported, -type not (yet - will come)
+    The source file(s) are specified this way:
+    <file>:<file>:<file>:...:<base directory=""></file></file></file>
+    where <file> is anything PHYSFS supports (directories, ZIP-files, and some less known game-specific formats). 
+    The very first file/directory will be used as write directory, if possible.</file>
+    No support for writing to ZIP for now.
+    Below info how to mount zip inside DOS shell:
+    $ mount c mygame.zip:/ 
+     mounts the contents of mygame.zip as c:
+    $ mount c c:\temp:mygame.zip:/ 
+     mounts c:\temp and mygame.zip as c: (files are merged), 
+    and all write accesses go to c:\temp.
+    $ mount c x.zip:/
+    $ mount d y.zip:/
+     is the same as
+    $ mount c x.zip:y.zip:/
+    $ mount d x.zip:y.zip:/
+     is the same as
+    $ mount c x.zip:y.zip:/
+    $ mount d :/
+     Note the last mount: shorthand for "use physfs, don't add anything new"
+    $ mount c mygame.zip:/gamedir
+     mounts the folder "gamedir" inside mygame.zip as c:
+    $ mount c game.zip:/c
+    $ mount d :/d -t cdrom
+     If you do this, i.e. only the very first mount contains any zip-files/directories, and all other mounts use the shorthand syntax
+    $ mount c /home/roms/:/home/roms/game.zip:/
+    mounts <roms as write dir>:<load game.zip file>:<root in zip>
 
 AUTOMATION: Do I always have to type these commands?
     In the DOSBox configuration file is an [autoexec] section. The commands
@@ -352,7 +384,7 @@ To be able to use Command Line Parameters:
 The options are valid for all operating systems unless noted in the option
 description:
 
-dosbox [name] [-exit] [-dbat] [-c command] [-fullscreen] [-userconf]
+dosbox [name] [-exit] [-dbat] [-savedir path] [-c command] [-fullscreen] [-userconf]
        [-conf congfigfilelocation] [-lang languagefilelocation]
        [-machine machine type] [-noconsole] [-startmapper] [-noautoexec]
        [-securemode] [-scaler scaler | -forcescaler scaler] [-version]
@@ -372,6 +404,12 @@ dosbox -erasemapper
 
   -exit
         DOSBox will close itself when the DOS application "name" ends.
+
+  -dbat
+        Runs DOSBOX.BAT file from launched mount point (e.g. topdir)
+
+  -savedir path
+        Start DOSBox using specific directory for save slots to read/write.
 
   -c command
         Runs the specified command before running "name". Multiple commands
