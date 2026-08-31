@@ -2429,7 +2429,10 @@ void MAPPER_Init(void) {
 	InitializeJoysticks();
 	CreateLayout();
 	CreateBindGroups();
-	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
+	if (!MAPPER_LoadBinds()) {
+		CreateDefaultBinds();
+		MAPPER_SaveBinds();
+	}
 	for (CButton_it but_it = buttons.begin();but_it!=buttons.end();but_it++) {
 		(*but_it)->BindColor();
 	}
