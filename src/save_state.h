@@ -26,8 +26,9 @@ class SaveState
 {
 public:
     static SaveState& instance();
+    static std::string custom_savedir;
 
-   typedef std::string Error;
+    typedef std::string Error;
     static const size_t SLOT_COUNT = 10; //slot: [0,...,SLOT_COUNT - 1]
 
     void save   (size_t slot);       //throw (Error)

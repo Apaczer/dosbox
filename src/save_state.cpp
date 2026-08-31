@@ -134,6 +134,8 @@ extern "C" {
 	int my_miniunz(char ** savefile, const char * savefile2, const char * savedir);
 }
 
+std::string SaveState::custom_savedir;
+
 void SaveState::save(size_t slot) { //throw (Error)
 	if (slot >= SLOT_COUNT)  return;
 	SDL_PauseAudio(0);
@@ -147,8 +149,8 @@ void SaveState::save(size_t slot) { //throw (Error)
 	bool create_memorysize=false;
 	extern const char* RunningProgram;
 	std::string path;
-	bool Get_Custom_SaveDir(std::string& savedir);
-	if(Get_Custom_SaveDir(path)) {
+	if(!custom_savedir.empty()) {
+		path = custom_savedir;
 		Cross::CreateDir(path);
 		path+=CROSS_FILESPLIT;
 	} else {
@@ -256,8 +258,9 @@ void SaveState::load(size_t slot) const { //throw (Error)
 	bool read_title=false;
 	bool read_memorysize=false;
 	std::string path;
-	bool Get_Custom_SaveDir(std::string& savedir);
-	if(Get_Custom_SaveDir(path)) {
+
+	if(!custom_savedir.empty()) {
+		path = custom_savedir;
 		path+=CROSS_FILESPLIT;
 	} else {
 		extern std::string capturedir;

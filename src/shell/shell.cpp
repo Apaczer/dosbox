@@ -26,6 +26,7 @@
 #include "shell.h"
 #include "callback.h"
 #include "support.h"
+#include "../save_state.h"
 
 
 Bitu call_shellstop;
@@ -376,6 +377,9 @@ public:
 		/* Register a virtual AUOEXEC.BAT file */
 		std::string line;
 		Section_line * section=static_cast<Section_line *>(configuration);
+
+		/* Read -savedir for savestate custom dir path, do it early so it won't be read by shell buff */
+		control->cmdline->FindString("-savedir", SaveState::custom_savedir, true);
 
 		/* Check -securemode switch to disable mount/imgmount/boot after running autoexec.bat */
 		bool secure = control->cmdline->FindExist("-securemode",true);
