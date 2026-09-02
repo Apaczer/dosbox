@@ -72,4 +72,15 @@ extern bool SDLNetInited;
 #include "logging.h"
 #endif // the logging system.
 
+extern bool dosbox_autosave;
+extern bool dosbox_autoload;
+extern int dosbox_autoslot;
+void DOSBOX_AutoSave(void);
+void DOSBOX_AutoLoad(void);
+void SetGameState_Run(int value);
+void SaveGameState_Run(void);
+bool LoadGameState_Run(void);
+void NextSaveSlot_Run(void);
+void PreviousSaveSlot_Run(void);
+
 #endif /* DOSBOX_DOSBOX_H */

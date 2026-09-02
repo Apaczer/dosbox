@@ -498,6 +498,9 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* Started from debug.com, then set breakpoint at start */
 		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
 #endif
+		if (dosbox_autoload) {
+			DOSBOX_AutoLoad();
+		}
 		return true;
 	}
 	return false;

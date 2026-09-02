@@ -512,6 +512,7 @@ static void GFX_SetIcon() {
 static void KillSwitch(bool pressed) {
 	if (!pressed)
 		return;
+	DOSBOX_AutoSave();
 	throw 1;
 }
 
@@ -1701,6 +1702,7 @@ void GFX_Start() {
 }
 
 static void GUI_ShutDown(Section * /*sec*/) {
+	DOSBOX_AutoSave();
 	GFX_Stop();
 	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
 	if (sdl.mouse.locked) GFX_CaptureMouse();
@@ -3002,6 +3004,7 @@ int main(int argc, char* argv[]) {
 		if (control->cmdline->FindExist("-startmapper")) MAPPER_RunInternal();
 		/* Start up main machine */
 		control->StartUp();
+		DOSBOX_AutoSave();
 		/* Shutdown everything */
 	} catch (char * error) {
 #if defined (WIN32)
@@ -3022,9 +3025,11 @@ int main(int argc, char* argv[]) {
 
 	}
 	catch (int){
+		DOSBOX_AutoSave();
 		; //nothing, pressed killswitch
 	}
 	catch(...){
+		DOSBOX_AutoSave();
 		; // Unknown error, let's just exit.
 	}
 #if defined (WIN32)

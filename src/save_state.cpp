@@ -245,13 +245,13 @@ delete_all:
 	if (!save_err) LOG_MSG("Saved. (Slot %d)",slot+1);
 }
 
-void SaveState::load(size_t slot) const { //throw (Error)
-//	if (isEmpty(slot)) return;
+bool SaveState::load(size_t slot) const { //throw (Error)
+//	if (isEmpty(slot)) return false;
 	extern unsigned int MEM_TotalPages(void);
 	bool load_err=false;
 	if((MEM_TotalPages()*4096/1024/1024)>200) {
 		LOG_MSG("Stopped. 200 MB is the maximum memory size for saving/loading states.");
-		return;
+		return false;
 	}
 	SDL_PauseAudio(0);
 	extern const char* RunningProgram;
@@ -282,9 +282,9 @@ void SaveState::load(size_t slot) const { //throw (Error)
 	std::ifstream check_slot;
 	check_slot.open(save.c_str(), std::ifstream::in);
 	if(check_slot.fail()) {
-		LOG_MSG("No saved slot - %d (%s)",slot+1,save.c_str());
+		LOG_MSG("No saved slot - %d (%s)",(int)slot+1,save.c_str());
 		load_err=true;
-		return;
+		return false;
 	}
 
 	for (CompEntry::const_iterator i = components.begin(); i != components.end(); ++i) {
@@ -315,9 +315,9 @@ void SaveState::load(size_t slot) const { //throw (Error)
 
 			char * const buffer = (char*)alloca( (length+1) * sizeof(char)); // char buffer[length];
 			check_title.read (buffer, length);
+			buffer[length] = '\0';
 			check_title.close();
-			if(strncmp(buffer,RunningProgram,length)) {
-				buffer[length]='\0';
+			if(strcasecmp(buffer,RunningProgram)) {
 				LOG_MSG("Aborted. Check your program name: %s",buffer);
 				load_err=true;
 				goto delete_all;
@@ -389,7 +389,57 @@ delete_all:
 	remove(save2.c_str());
 	save2=temp+"Memory_Size";
 	remove(save2.c_str());
-	if (!load_err) LOG_MSG("Loaded. (Slot %d)",slot+1);
+	if (!load_err) {
+		LOG_MSG("Loaded. (Slot %d)",(int)slot+1);
+		return true;
+	}
+	return false;
+}
+
+std::string SaveState::getSavedProgramName(size_t slot) const {
+	if (slot >= SLOT_COUNT) return "";
+	std::string path;
+	if(!custom_savedir.empty()) {
+		path = custom_savedir;
+		path+=CROSS_FILESPLIT;
+	} else {
+		extern std::string capturedir;
+		const size_t last_slash_idx = capturedir.find_last_of("\\/");
+		if (std::string::npos != last_slash_idx) {
+			path = capturedir.substr(0, last_slash_idx);
+		} else {
+			path = ".";
+		}
+		path += CROSS_FILESPLIT;
+		path +="save";
+		path += CROSS_FILESPLIT;
+	}
+	std::string temp = path;
+	std::stringstream slotname;
+	slotname << slot+1;
+	std::string save = temp + slotname.str() + ".sav";
+	std::ifstream check_slot(save.c_str(), std::ifstream::in);
+	if (check_slot.fail()) return "";
+	check_slot.close();
+
+	my_miniunz((char **)save.c_str(), "Program_Name", temp.c_str());
+	std::string tempname = temp + "Program_Name";
+	std::ifstream check_title(tempname.c_str(), std::ifstream::in);
+	if (check_title.fail()) return "";
+	check_title.seekg(0, std::ios::end);
+	int length = check_title.tellg();
+	check_title.seekg(0, std::ios::beg);
+	if (length <= 0 || length > 64) {
+		check_title.close();
+		remove(tempname.c_str());
+		return "";
+	}
+	char * const buffer = (char*)alloca((length + 1) * sizeof(char));
+	check_title.read(buffer, length);
+	buffer[length] = '\0';
+	check_title.close();
+	remove(tempname.c_str());
+	return std::string(buffer);
 }
 
 bool SaveState::isEmpty(size_t slot) const {

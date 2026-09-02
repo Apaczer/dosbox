@@ -425,21 +425,7 @@ void SaveGameState(bool pressed) {
 
 void LoadGameState(bool pressed) {
     if (!pressed) return;
-
-//    if (SaveState::instance().isEmpty(currentSlot))
-//    {
-//        LOG_MSG("[%s]: State %d is empty!", getTime().c_str(), currentSlot + 1);
-//        return;
-//    }
-    try
-    {
-        SaveState::instance().load(currentSlot);
-        LOG_MSG("[%s]: State %d loaded!", getTime().c_str(), currentSlot + 1);
-    }
-    catch (const SaveState::Error& err)
-    {
-        notifyError(err);
-    }
+    LoadGameState_Run();
 }
 
 void NextSaveSlot(bool pressed) {
@@ -449,7 +435,7 @@ void NextSaveSlot(bool pressed) {
     GetSaveSlot(currentSlot);
 
     const bool emptySlot = SaveState::instance().isEmpty(currentSlot);
-    LOG_MSG("Active save slot: %d %s", currentSlot + 1,  emptySlot ? "[Empty]" : "");
+    LOG_MSG("Active save slot: %d %s", (int)currentSlot + 1,  emptySlot ? "[Empty]" : "");
 }
 
 
@@ -460,14 +446,67 @@ void PreviousSaveSlot(bool pressed) {
     GetSaveSlot(currentSlot);
 
     const bool emptySlot = SaveState::instance().isEmpty(currentSlot);
-    LOG_MSG("Active save slot: %d %s", currentSlot + 1, emptySlot ? "[Empty]" : "");
+    LOG_MSG("Active save slot: %d %s", (int)currentSlot + 1, emptySlot ? "[Empty]" : "");
 }
 }
 void SetGameState_Run(int value) { SetGameState(value); }
 void SaveGameState_Run(void) { SaveGameState(true); }
-void LoadGameState_Run(void) { LoadGameState(true); }
+bool LoadGameState_Run(void) {
+    try
+    {
+        bool res = SaveState::instance().load(currentSlot);
+        if (res) {
+            LOG_MSG("[%s]: State %d loaded!", getTime().c_str(), (int)currentSlot + 1);
+            return true;
+        }
+        return false;
+    }
+    catch (const SaveState::Error& err)
+    {
+        notifyError(err);
+        return false;
+    }
+}
 void NextSaveSlot_Run(void) { NextSaveSlot(true); }
 void PreviousSaveSlot_Run(void) { PreviousSaveSlot(true); }
+
+bool dosbox_autosave = false;
+bool dosbox_autoload = false;
+int dosbox_autoslot = 1;
+static bool autoload_done = false;
+static bool autosave_done = false;
+
+void DOSBOX_AutoSave(void) {
+	if (!dosbox_autosave || autosave_done) return;
+	autosave_done = true;
+	if (dosbox_autoslot > 0 && dosbox_autoslot <= (int)SaveState::SLOT_COUNT) {
+		currentSlot.set(dosbox_autoslot - 1);
+		GetSaveSlot(dosbox_autoslot - 1);
+	}
+	LOG_MSG("Autosaving state (Slot %d)...", (int)currentSlot + 1);
+	SaveGameState_Run();
+}
+
+void DOSBOX_AutoLoad(void) {
+	if (!dosbox_autoload || autoload_done) return;
+	size_t slot = (dosbox_autoslot > 0 && dosbox_autoslot <= (int)SaveState::SLOT_COUNT) ? (dosbox_autoslot - 1) : (size_t)currentSlot;
+	extern const char* RunningProgram;
+	std::string savedProg = SaveState::instance().getSavedProgramName(slot);
+	if (savedProg.empty()) return;
+	if (strcasecmp(savedProg.c_str(), RunningProgram) != 0) {
+		// Save state is for another executable (e.g. SCIV vs loader SIERRA)
+		// Wait until the matching executable starts
+		return;
+	}
+	if (dosbox_autoslot > 0 && dosbox_autoslot <= (int)SaveState::SLOT_COUNT) {
+		currentSlot.set(dosbox_autoslot - 1);
+		GetSaveSlot(dosbox_autoslot - 1);
+	}
+	LOG_MSG("Autoloading state for %s (Slot %d)...", RunningProgram, (int)currentSlot + 1);
+	if (LoadGameState_Run()) {
+		autoload_done = true;
+	}
+}
 
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -507,6 +546,20 @@ static void DOSBOX_RealInit(Section * sec) {
   MAPPER_AddHandler(PreviousSaveSlot, MK_f6, MMOD2,"prevslot","Prev. Slot");
   MAPPER_AddHandler(NextSaveSlot, MK_f7, MMOD2,"nextslot","Next Slot");
 #endif
+
+	dosbox_autosave = section->Get_bool("autosave");
+	dosbox_autoload = section->Get_bool("autoload");
+	dosbox_autoslot = section->Get_int("autoslot");
+	if (control->cmdline->FindExist("-autosave",true)) dosbox_autosave = true;
+	if (control->cmdline->FindExist("-autoload",true)) dosbox_autoload = true;
+	if (control->cmdline->FindExist("-noautosave",true)) dosbox_autosave = false;
+	if (control->cmdline->FindExist("-noautoload",true)) dosbox_autoload = false;
+	int cmd_slot = 0;
+	if (control->cmdline->FindInt("-autoslot",cmd_slot,true)) {
+		if (cmd_slot >= 0 && cmd_slot <= (int)SaveState::SLOT_COUNT) {
+			dosbox_autoslot = cmd_slot;
+		}
+	}
 	
   std::string mtype(section->Get_string("machine"));
 	svgaCard = SVGA_None;
@@ -569,6 +622,16 @@ void DOSBOX_Init(void) {
 
 	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
+
+	Pbool = secprop->Add_bool("autosave",Property::Changeable::Always,false);
+	Pbool->Set_help("Automatically save state on exit.");
+
+	Pbool = secprop->Add_bool("autoload",Property::Changeable::Always,false);
+	Pbool->Set_help("Automatically load state on program start if save exists.");
+
+	Pint = secprop->Add_int("autoslot",Property::Changeable::Always,1);
+	Pint->SetMinMax(0,(int)SaveState::SLOT_COUNT);
+	Pint->Set_help("Slot to use for autosave and autoload (1-10, 0=active slot).");
 
 #if C_DEBUG
 	LOG_StartUp();

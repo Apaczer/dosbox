@@ -32,8 +32,9 @@ public:
     static const size_t SLOT_COUNT = 10; //slot: [0,...,SLOT_COUNT - 1]
 
     void save   (size_t slot);       //throw (Error)
-    void load   (size_t slot) const; //throw (Error)
+    bool load   (size_t slot) const; //throw (Error)
     bool isEmpty(size_t slot) const;
+    std::string getSavedProgramName(size_t slot) const;
 
     //initialization: register relevant components on program startup
     struct Component
