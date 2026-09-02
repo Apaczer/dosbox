@@ -490,7 +490,7 @@ physfsDrive::physfsDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _secto
 		if((lastdir == newname) && !strchr(dir+(((dir[0]|0x20) >= 'a' && (dir[0]|0x20) <= 'z')?2:0),':')) {
 			// If the first parameter is a directory, the next one has to be the archive file,
 			// do not confuse it with basedir if trailing : is not there!
-			int tmp = strlen(dir)-1;
+			int tmp = strlen(dir);
 			dir[tmp++] = ':';
 			dir[tmp++] = CROSS_FILESPLIT;
 			dir[tmp] = '\0';
@@ -557,10 +557,23 @@ bool physfsFile::Read(Bit8u * data,Bit16u * size) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	if (last_action==WRITE) prepareRead();
+	if (last_action==WRITE) {
+		if (!prepareRead()) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+	}
 	last_action=READ;
+	if (!fhandle) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	PHYSFS_sint64 mysize = PHYSFS_read(fhandle,data,1,(PHYSFS_uint64)*size);
 	//LOG_MSG("Read %i bytes (wanted %i) at %i of %s (%s)",(int)mysize,(int)*size,(int)PHYSFS_tell(fhandle),name,PHYSFS_getLastError());
+	if (mysize < 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	*size = (Bit16u)mysize;
 	return true;
 }
@@ -570,12 +583,22 @@ bool physfsFile::Write(Bit8u * data,Bit16u * size) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	if (last_action==READ) prepareWrite();
+	if (last_action==READ) {
+		if (!prepareWrite()) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+	}
 	last_action=WRITE;
+	if (!fhandle) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	if (*size==0) {
 		if (PHYSFS_tell(fhandle) == 0) {
 			PHYSFS_close(PHYSFS_openWrite(pname));
 			//LOG_MSG("Truncate %s (%s)",name,PHYSFS_getLastError());
+			return true;
 		} else {
 			LOG_MSG("PHYSFS TODO: truncate not yet implemented (%s at %i)",pname,PHYSFS_tell(fhandle));
 			return false;
@@ -583,16 +606,21 @@ bool physfsFile::Write(Bit8u * data,Bit16u * size) {
 	} else {
 		PHYSFS_sint64 mysize = PHYSFS_write(fhandle,data,1,(PHYSFS_uint64)*size);
 		//LOG_MSG("Wrote %i bytes (wanted %i) at %i of %s (%s)",(int)mysize,(int)*size,(int)PHYSFS_tell(fhandle),name,PHYSFS_getLastError());
+		if (mysize < 0) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 		*size = (Bit16u)mysize;
 		return true;
 	}
 }
 bool physfsFile::Seek(Bit32u * pos,Bit32u type) {
+	if (!fhandle) return false;
 	PHYSFS_sint64 mypos = (Bit32s)*pos;
 	switch (type) {
 	case DOS_SEEK_SET:break;
 	case DOS_SEEK_CUR:mypos += PHYSFS_tell(fhandle); break;
-	case DOS_SEEK_END:mypos += PHYSFS_fileLength(fhandle);-mypos; break;
+	case DOS_SEEK_END:mypos += PHYSFS_fileLength(fhandle); break;
 	default:
 	//TODO Give some doserrorcode;
 		return false;//ERROR
@@ -610,11 +638,17 @@ bool physfsFile::Seek(Bit32u * pos,Bit32u type) {
 }
 
 bool physfsFile::prepareRead() {
+	if (!fhandle) return false;
 	PHYSFS_uint64 pos = PHYSFS_tell(fhandle);
 	PHYSFS_close(fhandle);
 	fhandle = PHYSFS_openRead(pname);
+	if (fhandle == NULL) {
+		LOG_MSG("PHYSFS openRead failed: %s.",PHYSFS_getLastError());
+		return false;
+	}
 	PHYSFS_seek(fhandle, pos);
 	//LOG_MSG("Goto read (%s at %i)",pname,PHYSFS_tell(fhandle));
+	return true;
 }
 
 #ifndef WIN32
@@ -630,14 +664,14 @@ bool physfsFile::prepareWrite() {
 	}
 	//LOG_MSG("Goto write (%s at %i)",pname,PHYSFS_tell(fhandle));
 	const char *fdir = PHYSFS_getRealDir(pname);
-	PHYSFS_uint64 pos = PHYSFS_tell(fhandle);
+	PHYSFS_uint64 pos = fhandle ? PHYSFS_tell(fhandle) : 0;
 	char *slash = strrchr(pname,'/');
 	if (slash && slash != pname) {
 		*slash = 0;
 		PHYSFS_mkdir(pname);
 		*slash = '/';
 	}
-	if (strcmp(fdir,wdir)) { /* we need COW */
+	if (!fdir || strcmp(fdir,wdir)) { /* we need COW */
 		//LOG_MSG("COW",pname,PHYSFS_tell(fhandle));
 		PHYSFS_file *whandle = PHYSFS_openWrite(pname);
 		if (whandle == NULL) {
@@ -646,23 +680,28 @@ bool physfsFile::prepareWrite() {
 		}
 		char buffer[65536];
 		PHYSFS_sint64 size;
-		PHYSFS_seek(fhandle, 0);
-		while ((size = PHYSFS_read(fhandle,buffer,1,65536)) > 0) {
-			if (PHYSFS_write(whandle,buffer,1,size) != size) {
-				LOG_MSG("PHYSFS copy-on-write failed: %s.",PHYSFS_getLastError());
-				PHYSFS_close(whandle);
-				return false;
+		if (fhandle) {
+			PHYSFS_seek(fhandle, 0);
+			while ((size = PHYSFS_read(fhandle,buffer,1,65536)) > 0) {
+				if (PHYSFS_write(whandle,buffer,1,size) != size) {
+					LOG_MSG("PHYSFS copy-on-write failed: %s.",PHYSFS_getLastError());
+					PHYSFS_close(whandle);
+					return false;
+				}
 			}
+			PHYSFS_close(fhandle);
 		}
 		PHYSFS_seek(whandle, pos);
-		PHYSFS_close(fhandle);
 		fhandle = whandle;
 	} else { // megayuck - physfs on posix platforms uses O_APPEND. We illegally access the fd directly and clear that flag.
 		//LOG_MSG("noCOW",pname,PHYSFS_tell(fhandle));
-		PHYSFS_close(fhandle);
+		if (fhandle) PHYSFS_close(fhandle);
 		fhandle = PHYSFS_openAppend(pname);
 #ifndef WIN32
-		int rc = fcntl(**(int**)fhandle->opaque,F_SETFL,0);
+		if (fhandle == NULL) {
+			LOG_MSG("PHYSFS openAppend failed: %s.",PHYSFS_getLastError());
+			return false;
+		}
 #endif
 		PHYSFS_seek(fhandle, pos);
 	}
