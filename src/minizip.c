@@ -215,7 +215,7 @@ int isLargeFile(const char* filename)
 
 int my_minizip(
     char ** savefile,
-    char ** savefile2) {
+    const char * savefile2) {
     int i;
     int opt_overwrite=0;
     int opt_compress_level=Z_DEFAULT_COMPRESSION;

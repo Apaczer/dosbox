@@ -446,7 +446,7 @@ int do_extract_onefile(uf,filename,opt_extract_without_path,opt_overwrite,passwo
  #endif
 
 int my_miniunz(
-    char ** savefile,
+    const char * savefile,
     const char * savefile2,
 	const char * savedir) {
     const char *zipfilename=NULL;
