@@ -26,6 +26,7 @@ L3 - RALT
 R3 - RSHIFT
 HOME - quit DOSBox
 START + Y - show on-screen-display info
+START + X - show help
 START + A - fast-forward hold ON
 START + B - fast-forward toggle ON/OFF
 START - ENTER (Modifier 2)

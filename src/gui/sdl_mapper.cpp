@@ -1610,6 +1610,9 @@ public:
 		case MK_home: 
 			key=SDLK_HOME; 
 			break;
+		case MK_equals:
+			key=SDLK_EQUALS;
+			break;
 #ifdef MIYOO
 		case MK_rctrl: // RESET
 			key=SDLK_RCTRL;

@@ -1381,12 +1381,63 @@ void GetSaveSlot(int slot) {
 #ifdef DINGUX
 bool osd_active=false;
 bool osd_last = false;
+bool osd_help_active = false;
+bool osd_help_last = false;
 
-static void ActiveOSD(bool pressed) {
+static const char* osd_help_text =
+#ifdef MIYOO
+	"--- Hotkeys Help (default) ---\n"
+	"START + X      : Toggle this help\n"
+	"START + Y      : Toggle OSD stats\n"
+	"START + A      : Fast-forward (hold)\n"
+	"START + B      : Fast-forward (toggle)\n"
+	"SELECT + L1    : Save state\n"
+	"SELECT + R1    : Load state\n"
+	"SELECT + L2/R2 : Prev / Next save slot\n"
+	"SELECT + Y / X : Inc / Dec cycles\n"
+	"SELECT + A / B : Inc / Dec frameskip\n"
+	"L1 / R1        : Virtual mouse / OSK\n"
+	"HOME           : Quit DOSBox\n"
+	"\n"
+	"--- Default Controls ---\n"
+	"D-PAD: Arrows  | A: Alt   | B: Ctrl\n"
+	"Y: Space       | X: Shift | SELECT: Esc\n"
+	"START: Enter   | L2: PgUp | R2: PgDn";
+#else
+	"--- Hotkeys Help (default) ---\n"
+	"EQUALS (=)      : Toggle this help\n"
+	"Scroll Lock     : Toggle OSD stats\n"
+	"MMOD2 + F12     : Fast-forward (hold)\n"
+	"MMOD1+MMOD2+F12 : Fast-forward (toggle)\n"
+	"MMOD2 + F5      : Save state\n"
+	"MMOD2 + F9      : Load state\n"
+	"MMOD2 + F6/F7   : Prev / Next save slot\n"
+	"MMOD1 + F11/F12 : Inc / Dec cycles\n"
+	"MMOD1 + F7/F8   : Inc / Dec frameskip\n"
+	"TAB             : V.Mouse (hardcoded)\n"
+	"MENU            : OSKeyboard(hardcoded)\n"
+	"MMOD1 + F9      : Quit DOSBox\n"
+	"\n"
+	"--- Default Modifiers ---\n"
+	"MMOD1: RCTRL or LCTRL\n"
+	"MMOD2: RALT or LALT";
+#endif
+
+void GFX_ForceUpdate(void);
+
+void ActiveOSD(bool pressed) {
 	if (!pressed)
 		return;
 	osd_active ^= 1;
 	if(!osd_active) osd_last = true;
+}
+
+void ActiveHelp(bool pressed) {
+	if (!pressed)
+		return;
+	osd_help_active ^= 1;
+	if(!osd_help_active) osd_help_last = true;
+	GFX_ForceUpdate();
 }
 
 void OSD_DrawStats() {
@@ -1404,6 +1455,33 @@ void OSD_DrawStats() {
 	stringRGBA(sdl.surface, 8, (screen_h - 12), osd_text, 255, 255, 255, 255);
 }
 
+void OSD_DrawHelp() {
+	uint16_t screen_w = sdl.surface->w;
+	uint16_t screen_h = sdl.surface->h;
+	SDL_Rect bg;
+	bg.x = 0;
+	bg.y = 0;
+	bg.w = screen_w;
+	bg.h = screen_h;
+	SDL_FillRect(sdl.surface, &bg, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+
+	int x = 8;
+	int y = 14;
+	const char* ptr = osd_help_text;
+	char line[64];
+	while (*ptr) {
+		const char* next = strchr(ptr, '\n');
+		size_t len = next ? (size_t)(next - ptr) : strlen(ptr);
+		if (len >= sizeof(line)) len = sizeof(line) - 1;
+		strncpy(line, ptr, len);
+		line[len] = '\0';
+		stringRGBA(sdl.surface, x, y, line, 255, 255, 255, 255);
+		y += 12;
+		if (!next) break;
+		ptr = next + 1;
+	}
+}
+
 void OSD_CleanSurf()
 {
 	SDL_Rect dest;
@@ -1415,6 +1493,10 @@ void OSD_CleanSurf()
     if(osd_last){
 	    SDL_FillRect(sdl.surface, &dest, 0);
         osd_last = false;
+    }
+    if(osd_help_last){
+	    SDL_FillRect(sdl.surface, NULL, 0);
+        osd_help_last = false;
     }
 }
 #endif
@@ -1507,11 +1589,18 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (sdl.blit.surface) {
 				SDL_UnlockSurface(sdl.blit.surface);
+#ifdef DINGUX
+				OSD_CleanSurf();
+#endif
 				int Blit = SDL_BlitSurface( sdl.blit.surface, 0, sdl.surface, &sdl.clip );
 				LOG(LOG_MISC,LOG_WARN)("BlitSurface returned %d",Blit);
 			} else {
 				SDL_UnlockSurface(sdl.surface);
 			}
+#ifdef DINGUX
+			if(osd_active) OSD_DrawStats();
+			if(osd_help_active) OSD_DrawHelp();
+#endif
 			SDL_Flip(sdl.surface);
 		} else if (changedLines) {
 			Bitu y = 0, index = 0, rectCount = 0;
@@ -1565,6 +1654,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			VKEYB_CleanVkeyboard(sdl.blit.buffer);
 		}
 		if(osd_active) OSD_DrawStats();
+		if(osd_help_active) OSD_DrawHelp();
 		SDL_Flip(sdl.surface);
 		break;
 #endif
@@ -1806,6 +1896,7 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 void Restart(bool pressed);
 #ifdef DINGUX
 void ActiveOSD(bool pressed);
+void ActiveHelp(bool pressed);
 #endif
 
 static void GUI_StartUp(Section * sec) {
@@ -2183,6 +2274,11 @@ static void GUI_StartUp(Section * sec) {
 	MAPPER_AddHandler(ActiveOSD,MK_space,MMOD2,"osd","OSD"); // Y + START
 #else
 	MAPPER_AddHandler(ActiveOSD,MK_scrolllock,0,"osd","OSD");
+#endif
+#ifdef MIYOO
+	MAPPER_AddHandler(ActiveHelp,MK_lshift,MMOD2,"help","Help"); // X + START
+#else
+	MAPPER_AddHandler(ActiveHelp,MK_equals,0,"help","Help");
 #endif
 #endif
 #ifdef MIYOO
