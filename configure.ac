@@ -241,14 +241,14 @@ case "$enable_platform" in
   dingux)
     AC_MSG_RESULT([dingux])
     AC_DEFINE(DINGUX,1)
-    LIBS="$LIBS -lSDL_gfx -lSDL_image"
+    LIBS="$LIBS $(pkg-config --libs SDL_gfx SDL_image)"
     ;;
   miyoo)
     AC_MSG_RESULT([miyoo])
     AC_DEFINE(DINGUX,1)
     CPPFLAGS="$CPPFLAGS -DMIYOO -DLOWMEM"
     CXXFLAGS="$CXXFLAGS -g -O2 -march=armv5te -mtune=arm926ej-s -pipe -fno-builtin -fno-common -ffast-math -fomit-frame-pointer -fexpensive-optimizations -frename-registers"
-    LIBS="$LIBS -lSDL_gfx -lSDL_image"
+    LIBS="$LIBS $(pkg-config --libs SDL_gfx SDL_image)"
     ;;
   no)
     AC_MSG_RESULT([none])
