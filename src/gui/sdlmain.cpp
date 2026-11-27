@@ -1430,6 +1430,7 @@ void ActiveOSD(bool pressed) {
 		return;
 	osd_active ^= 1;
 	if(!osd_active) osd_last = true;
+	GFX_ForceUpdate();
 }
 
 void ActiveHelp(bool pressed) {
