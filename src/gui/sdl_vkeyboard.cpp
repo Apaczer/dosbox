@@ -185,7 +185,8 @@ int VKEYB_CheckEvent(SDL_Event *event)
 	Uint8 *keys = SDL_GetKeyState(NULL);
 	if(keystate && event->key.keysym.sym == SDLK_BACKSPACE && !keys[SDLK_ESCAPE]) { // R1 pressed & SELECT released (to not interfere with modifier held)
 #else
-	if(keystate && event->key.keysym.sym == SDLK_TAB) {
+	//if(keystate && event->key.keysym.sym == SDLK_TAB) {
+	if(keystate && event->key.keysym.sym == SDLK_MENU) { // for dingux you would want above cond. (using this soly for DEBUG)
 #endif
 		vkeyb_active ^= 1;
 		if(!vkeyb_active) vkeyb_last = true;
